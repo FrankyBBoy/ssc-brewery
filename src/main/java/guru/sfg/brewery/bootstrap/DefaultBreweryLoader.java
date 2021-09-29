@@ -140,9 +140,9 @@ public class DefaultBreweryLoader implements CommandLineRunner {
 
     private void loadUsers() {
         if (userRepository.count() == 0) {
-            Authority adminAuthority = authorityRepository.save(Authority.builder().role("ADMIN").build());
-            Authority userAuthority = authorityRepository.save(Authority.builder().role("USER").build());
-            Authority customerAuthority = authorityRepository.save(Authority.builder().role("CUSTOMER").build());
+            Authority adminAuthority = authorityRepository.save(Authority.builder().role("ROLE_ADMIN").build());
+            Authority userAuthority = authorityRepository.save(Authority.builder().role("ROLE_USER").build());
+            Authority customerAuthority = authorityRepository.save(Authority.builder().role("ROLE_CUSTOMER").build());
 
             userRepository.save(User.builder()
                 .username("spring")

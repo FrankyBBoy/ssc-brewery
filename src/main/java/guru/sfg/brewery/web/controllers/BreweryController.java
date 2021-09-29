@@ -23,14 +23,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.List;
 
-
 @RequiredArgsConstructor
-@RequestMapping("/brewery")
 @Controller
 public class BreweryController {
 
@@ -41,6 +38,7 @@ public class BreweryController {
         model.addAttribute("breweries", breweryService.getAllBreweries());
         return "breweries/index";
     }
+
     @GetMapping("/api/v1/breweries")
     public @ResponseBody
     List<Brewery> getBreweriesJson(){
