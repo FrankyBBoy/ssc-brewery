@@ -17,14 +17,24 @@
 package guru.sfg.brewery.bootstrap;
 
 import guru.sfg.brewery.domain.*;
+import guru.sfg.brewery.domain.security.Authority;
+import guru.sfg.brewery.domain.security.User;
 import guru.sfg.brewery.repositories.*;
+import guru.sfg.brewery.repositories.security.AuthorityRepository;
+import guru.sfg.brewery.repositories.security.UserRepository;
 import guru.sfg.brewery.web.model.BeerStyleEnum;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
 import java.util.Set;
 import java.util.UUID;
+
+import static java.util.Arrays.asList;
 
 
 /**
@@ -32,6 +42,7 @@ import java.util.UUID;
  */
 @RequiredArgsConstructor
 @Component
+@Slf4j
 public class DefaultBreweryLoader implements CommandLineRunner {
 
     public static final String TASTING_ROOM = "Tasting Room";
@@ -44,11 +55,15 @@ public class DefaultBreweryLoader implements CommandLineRunner {
     private final BeerInventoryRepository beerInventoryRepository;
     private final BeerOrderRepository beerOrderRepository;
     private final CustomerRepository customerRepository;
+    private final UserRepository userRepository;
+    private final AuthorityRepository authorityRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) {
         loadBreweryData();
         loadCustomerData();
+        loadUsers();
     }
 
     private void loadCustomerData() {
@@ -120,6 +135,34 @@ public class DefaultBreweryLoader implements CommandLineRunner {
                     .quantityOnHand(500)
                     .build());
 
+        }
+    }
+
+    private void loadUsers() {
+        if (userRepository.count() == 0) {
+            Authority adminAuthority = authorityRepository.save(Authority.builder().role("ADMIN").build());
+            Authority userAuthority = authorityRepository.save(Authority.builder().role("USER").build());
+            Authority customerAuthority = authorityRepository.save(Authority.builder().role("CUSTOMER").build());
+
+            userRepository.save(User.builder()
+                .username("spring")
+                .password(passwordEncoder.encode("guru"))
+                .authority(adminAuthority).build()
+            );
+
+            userRepository.save(User.builder()
+                .username("user")
+                .password(passwordEncoder.encode("password"))
+                .authority(userAuthority).build()
+            );
+
+            userRepository.save(User.builder()
+                .username("scott")
+                .password(passwordEncoder.encode("tiger"))
+                .authority(customerAuthority).build()
+            );
+
+            log.debug("Users Loaded: " + userRepository.count());
         }
     }
 }
