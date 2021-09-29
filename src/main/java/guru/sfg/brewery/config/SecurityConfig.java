@@ -45,6 +45,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     http
         .authorizeRequests(authorize -> {
           authorize
+              .antMatchers("/h2-console/**").permitAll() // do not use in production
               .antMatchers("/", "/webjars/**", "/login", "/resources/**").permitAll()
               .antMatchers("/beers/find", "/beers*").permitAll()
               .antMatchers(HttpMethod.GET, "/api/v1/beer/**").permitAll()
@@ -55,6 +56,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .and()
         .formLogin().and()
         .httpBasic();
+
+    // h2 console config
+    http.headers().frameOptions().sameOrigin();
   }
 
   @Bean
@@ -62,7 +66,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     return SfgPasswordEncoderFactories.createDelegatingPasswordEncoder();
   }
 
-  @Override
+
+
+/*  @Override
   protected void configure(AuthenticationManagerBuilder auth) throws Exception {
     auth.inMemoryAuthentication()
         .withUser("spring")
@@ -74,7 +80,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .roles("USER");
 
     auth.inMemoryAuthentication().withUser("scott").password("{bcrypt10}$2a$10$jv7rEbL65k4Q3d/mqG5MLuLDLTlg5oKoq2QOOojfB3e2awo.nlmgu").roles("CUSTOMER");
-  }
+  }*/
 
   //    @Override
 //    @Bean
