@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,8 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -50,12 +50,23 @@ class BeerOrderControllerTest extends BaseIT {
     Customer keyWestCustomer;
     List<Beer> loadedBeers;
 
+    BeerOrder stPeteOrder;
+    BeerOrder dunedinOrder;
+    BeerOrder keyWestsOrder;
+
     @BeforeEach
     void setUp() {
         stPeteCustomer = customerRepository.findAllByCustomerName(DefaultBreweryLoader.ST_PETE_DISTRIBUTING).orElseThrow();
         dunedinCustomer = customerRepository.findAllByCustomerName(DefaultBreweryLoader.DUNEDIN_DISTRIBUTING).orElseThrow();
         keyWestCustomer = customerRepository.findAllByCustomerName(DefaultBreweryLoader.KEY_WEST_DISTRIBUTORS).orElseThrow();
         loadedBeers = beerRepository.findAll();
+
+        stPeteOrder = beerOrderRepository
+            .findAllByCustomer(stPeteCustomer, Pageable.unpaged()).stream().findFirst().orElseThrow();
+        dunedinOrder = beerOrderRepository
+            .findAllByCustomer(dunedinCustomer, Pageable.unpaged()).stream().findFirst().orElseThrow();
+        keyWestsOrder = beerOrderRepository
+            .findAllByCustomer(keyWestCustomer, Pageable.unpaged()).stream().findFirst().orElseThrow();
     }
 
 //cant use nested tests bug - https://github.com/spring-projects/spring-security/issues/8793
@@ -188,24 +199,35 @@ class BeerOrderControllerTest extends BaseIT {
                 .andExpect(status().isForbidden());
     }
 
-    @Disabled
     @Test
-    void pickUpOrderNotAuth() {
+    void pickUpOrderNotAuth() throws Exception {
+        mockMvc.perform(put(API_ROOT + stPeteCustomer.getId() + "/orders/" + stPeteOrder.getId() + "/pickup")
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isUnauthorized());
     }
 
-    @Disabled
+    @WithUserDetails(value = "spring")
     @Test
-    void pickUpOrderNotAdminUser() {
+    void pickUpOrderNotAdminUser() throws Exception {
+        mockMvc.perform(put(API_ROOT + stPeteCustomer.getId() + "/orders/" + stPeteOrder.getId() + "/pickup")
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().is2xxSuccessful());
     }
 
-    @Disabled
+    @WithUserDetails(DefaultBreweryLoader.STPETE_USER)
     @Test
-    void pickUpOrderCustomerUserAUTH() {
+    void pickUpOrderCustomerUserAUTH() throws Exception {
+        mockMvc.perform(put(API_ROOT + stPeteCustomer.getId() + "/orders/" + stPeteOrder.getId() + "/pickup")
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().is2xxSuccessful());
     }
 
-    @Disabled
+    @WithUserDetails(DefaultBreweryLoader.DUNEDIN_USER)
     @Test
-    void pickUpOrderCustomerUserNOT_AUTH() {
+    void pickUpOrderCustomerUserNOT_AUTH() throws Exception {
+        mockMvc.perform(put(API_ROOT + stPeteCustomer.getId() + "/orders/" + stPeteOrder.getId() + "/pickup")
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isForbidden());
     }
 
     private BeerOrderDto buildOrderDto(Customer customer, UUID beerId) {
